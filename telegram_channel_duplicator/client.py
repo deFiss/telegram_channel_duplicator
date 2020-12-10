@@ -48,10 +48,11 @@ class Client:
 
     async def new_channel_post_handler(self, event):
 
-        output_chats = self.chat_controller.filter_chat(event.chat_id)
+        output_chats = self.chat_controller.filter_message(event)
 
         if output_chats:
-            logger.info(f'Новое сообщение в канале, event: {event}')
+            logger.info(f'Новое сообщение в канале, message_id: {event.message.id}')
+            await event.message.mark_read()
 
         for chat in output_chats:
             logger.info(f'Отправка в чат {chat}')

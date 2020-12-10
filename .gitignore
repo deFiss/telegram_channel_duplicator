@@ -3,4 +3,4 @@ venv/
 /logs/*
 __pycache__/
 .env
-account_session.session
+account_session*
