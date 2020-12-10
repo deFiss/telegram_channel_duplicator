@@ -48,6 +48,7 @@ class ChatController:
 
             if raw_words:
                 d['white_words'] = [s.strip() for s in raw_words.split(',')]
+                d['white_words'] = [x.replace('\\', '') for x in d['white_words']]
 
             logger.debug(f'Chats ID: {d}')
 
