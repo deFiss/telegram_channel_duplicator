@@ -4,3 +4,4 @@ venv/
 __pycache__/
 .env
 account_session*
+config.json
