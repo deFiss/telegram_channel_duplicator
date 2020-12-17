@@ -1,14 +1,12 @@
-import dotenv
 from telegram_channel_duplicator.client import Client
 from loguru import logger
 import colorama
 import os
 import sys
+import asyncio
 
 
-if __name__ == '__main__':
-    dotenv.load_dotenv()
-
+async def main():
     logger.remove()
     logger.add(
         sys.stderr,
@@ -24,6 +22,15 @@ if __name__ == '__main__':
         rotation='3mb',
         compression='zip'
     )
-    logger.info(colorama.Fore.LIGHTYELLOW_EX+'Created by https://github.com/deFiss')
+    logger.info(colorama.Fore.LIGHTYELLOW_EX + 'Created by https://github.com/deFiss')
 
-    Client()
+    client = Client()
+    await client.start()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
+
+
+
