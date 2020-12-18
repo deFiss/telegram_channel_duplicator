@@ -126,6 +126,12 @@ class Client:
         if len(data) >= 4:
             group["words"].extend([s.strip() for s in data[3].split(',')]),
 
+        # удаляем группу с таким же названием если она уже есть, что бы заменить её новой
+        config = ConfigController.get_config()
+        for g in config['groups']:
+            if g['name'] == group['name']:
+                ConfigController.del_group(g['name'])
+
         ConfigController.add_group(group)
 
         await self.client.send_message(chat_id, "✅")
@@ -174,7 +180,7 @@ class Client:
     @staticmethod
     def _check_text_entry(text, filters_list):
         for filter_text in filters_list:
-            if filter_text in text:
+            if filter_text.lower() in text.lower():
                 return True
 
         return False
