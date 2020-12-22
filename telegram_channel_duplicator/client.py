@@ -71,6 +71,9 @@ class Client:
                         if not output_channel:
                             continue
 
+                        if new_messages:
+                            new_messages.reverse()
+
                         for msg in new_messages:
 
                             # if words whitelist enabled
