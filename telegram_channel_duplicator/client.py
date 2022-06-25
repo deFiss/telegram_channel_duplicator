@@ -24,7 +24,7 @@ class Client:
             self.config['account_api_hash']
         )
 
-        logger.info('Авторизация в аккаунт')
+        logger.info('Account authorization')
 
         utc = pytz.timezone('UTC')
         self.last_message_check = datetime.datetime.now(tz=utc)
@@ -40,7 +40,7 @@ class Client:
 
     async def start(self):
         """
-        Запуск клиента
+        Client launch
         """
         await self.client.start(
             phone=self._get_phone,
@@ -48,17 +48,17 @@ class Client:
             password=self._enter_password,
         )
 
-        logger.info(f'Авторизация в аккаунт прошла успешно')
+        logger.info(f'Account authorization was successful')
 
         self.client.add_event_handler(self._new_message_handler, events.NewMessage(pattern=r'.+'))
         await self.main_loop()
 
     async def main_loop(self):
         """
-        Главный цикл
-        тут обновляются конфиги,
-        получается список всех новых сообщений из каждого инпут
-        канала в каждой группе и рассылается по аутгруппам
+        Main Loop
+        configs are updated here
+        get a list of all new messages from each input
+        channel in each group and sent to outgroups
         """
         while True:
             logger.debug('cycle')
@@ -84,10 +84,10 @@ class Client:
                             # if words whitelist enabled
                             if group['words']:
                                 if not self._check_text_entry(msg.message, group['words']):
-                                    logger.debug(f"В новом сообщении {msg.id} не найдены слова из белого списка")
+                                    logger.debug(f"Whitelisted words not found in new message {msg.id}")
                                     continue
 
-                            logger.debug(f"Отправка сообщения {msg.id} в {output_channel}")
+                            logger.debug(f"Sending message {msg.id} to {output_channel}")
                             await self.client.send_message(output_channel, msg)
 
             utc = pytz.timezone('UTC')
@@ -109,10 +109,10 @@ class Client:
         text = "**Группы:**\n\n"
 
         for group in config['groups']:
-            group_txt = f'🔸 Имя группы: {group["name"]}\n'\
-                f'🔽 Входные каналы: {", ".join(group["inputs"])}\n'\
-                f'➡️ Выходные каналы: {", ".join(group["outputs"])}\n'\
-                f'#️⃣ Белый список слов: {", ".join(group["words"])}\n\n'
+            group_txt = f'🔸 Group name: {group["name"]}\n'\
+                f'🔽 Input channels: {", ".join(group["inputs"])}\n'\
+                f'➡️ Output channels: {", ".join(group["outputs"])}\n'\
+                f'#️⃣ White list words: {", ".join(group["words"])}\n\n'
 
             text += group_txt
 
@@ -121,7 +121,7 @@ class Client:
     async def _command_add(self, chat_id, text):
         data = text.split('\n')
         if len(data) < 3:
-            await self.client.send_message(chat_id, "❌ Неверный ввод команды")
+            await self.client.send_message(chat_id, "❌ Invalid command input")
             return
 
         group = {
@@ -134,7 +134,7 @@ class Client:
         if len(data) >= 4:
             group["words"].extend([s.strip() for s in data[3].split(',')]),
 
-        # удаляем группу с таким же названием если она уже есть, что бы заменить её новой
+        # delete the group with the same name if it already exists in order to replace it with a new one
         config = ConfigController.get_config()
         for g in config['groups']:
             if g['name'] == group['name']:
@@ -150,23 +150,23 @@ class Client:
         await self.client.send_message(chat_id, "✅")
 
     async def _command_help(self, chat_id, text):
-        text = "🌐 Информация о командах\n\n"\
-            f"`{self.command_prefix + 'help'}` - выводит это сообщение\n\n" \
-            f"`{self.command_prefix + 'info'}` - выводит информацию о группах\n\n" \
-            f"`{self.command_prefix + 'add'} [имя группы]\n[входные каналы]\n[выходные каналы]\n[белый список слов]`\n"\
-            f" - добавляет группу, везде кроме названия можно перечислять через запятую\n"\
-            f"**Пример:**\n`{self.command_prefix}add new group\ntest 1, test channel 2\ntest channel 3\n#tag`\n\n" \
-            f"`{self.command_prefix + 'del'} [имя группы]` - удаляет группу"\
+        text = "🌐 Commands Information\n\n"\
+            f"`{self.command_prefix + 'help'}` - outputs this message\n\n" \
+            f"`{self.command_prefix + 'info'}` - displays information about groups\n\n" \
+            f"`{self.command_prefix + 'add'} [group name]\n[input channels]\n[output channels]\n[whitelist of words]`\n"\
+            f" - adds a group, everywhere except the name can be listed separated by commas\n"\
+            f"**Example:**\n`{self.command_prefix}add new group\ntest 1, test channel 2\ntest channel 3\n#tag`\n\n" \
+            f"`{self.command_prefix + 'del'} [group name]` - deletes a group"\
 
 
         await self.client.send_message(chat_id, text)
 
     async def _get_post_history(self, channel):
         """
-        Отдаёт последние посты канала
-        Не дублирует сообщения потому что
-        Мы фильтруем сообщения что бы остались только те, которые были
-        Присланы в начале текущего цикла
+        Gives the latest posts of the channel
+        Doesn't duplicate posts because
+        We filter messages so that only those that were
+        Submitted at the beginning of the current cycle
         """
         history = await self.client(
             GetHistoryRequest(
@@ -195,7 +195,7 @@ class Client:
 
     async def _get_groups(self):
         """
-        Преобразовывает буквенные названия чатов в группах в айдишники
+        Converts string names of chats in groups to IDs
         """
         groups_list = []
 
@@ -212,18 +212,18 @@ class Client:
 
     @staticmethod
     def _enter_code():
-        return input('Введите код из сообщения Telegram: ')
+        return input('Enter the code from the Telegram message: ')
 
     @staticmethod
     def _enter_password():
-        return input('Введите пароль двухфакторной аутентификации: ')
+        return input('Enter your two-factor authentication password: ')
 
     async def _get_chat_id(self, chat_name):
         async for dialog in self.client.iter_dialogs():
             if dialog.name == chat_name:
                 return dialog.id
 
-        logger.error(f"Чат с именем {chat_name} не найден в списке диалогов, он будет пропущен")
+        logger.error(f"Chat with the name {chat_name} was not found in the list of conversations, it will be skipped")
         return None
 
 
