@@ -1,5 +1,4 @@
 from telethon import TelegramClient, events
-import time
 import os
 from loguru import logger
 from .config_controller import ConfigController
@@ -8,7 +7,7 @@ import datetime
 from telethon.tl.functions.messages import GetHistoryRequest
 import asyncio
 
-SESSIONS_DIR = 'sessions'
+SESSIONS_DIR = "sessions"
 
 
 class Client:
@@ -19,23 +18,22 @@ class Client:
             os.mkdir(SESSIONS_DIR)
 
         self.client = TelegramClient(
-            os.path.join(SESSIONS_DIR, 'account_session'),
-            self.config['account_api_id'],
-            self.config['account_api_hash']
+            os.path.join(SESSIONS_DIR, "account_session"),
+            self.config["account_api_id"],
+            self.config["account_api_hash"],
         )
 
-        logger.info('Account authorization')
+        logger.info("Account authorization")
 
-        utc = pytz.timezone('UTC')
+        utc = pytz.timezone("UTC")
         self.last_message_check = datetime.datetime.now(tz=utc)
 
-        self.command_prefix = '~!'
+        self.command_prefix = "~!"
         self.commands = {
-            'info': self._command_info,
-            'add': self._command_add,
-            'del': self._command_del,
-            'help': self._command_help,
-
+            "info": self._command_info,
+            "add": self._command_add,
+            "del": self._command_del,
+            "help": self._command_help,
         }
 
     async def start(self):
@@ -48,9 +46,11 @@ class Client:
             password=self._enter_password,
         )
 
-        logger.info(f'Account authorization was successful')
+        logger.info(f"Account authorization was successful")
 
-        self.client.add_event_handler(self._new_message_handler, events.NewMessage(pattern=r'.+'))
+        self.client.add_event_handler(
+            self._new_message_handler, events.NewMessage(pattern=r".+")
+        )
         await self.main_loop()
 
     async def main_loop(self):
@@ -61,18 +61,18 @@ class Client:
         channel in each group and sent to outgroups
         """
         while True:
-            logger.debug('cycle')
+            logger.debug("cycle")
             self.config = ConfigController.get_config()
             groups = await self._get_groups()
 
             for group in groups:
-                for input_channel in group['inputs']:
+                for input_channel in group["inputs"]:
                     if not input_channel:
                         continue
 
                     new_messages = await self._get_post_history(input_channel)
 
-                    for output_channel in group['outputs']:
+                    for output_channel in group["outputs"]:
                         if not output_channel:
                             continue
 
@@ -82,18 +82,24 @@ class Client:
                         for msg in new_messages:
 
                             # if words whitelist enabled
-                            if group['words']:
-                                if not self._check_text_entry(msg.message, group['words']):
-                                    logger.debug(f"Whitelisted words not found in new message {msg.id}")
+                            if group["words"]:
+                                if not self._check_text_entry(
+                                    msg.message, group["words"]
+                                ):
+                                    logger.debug(
+                                        f"Whitelisted words not found in new message {msg.id}"
+                                    )
                                     continue
 
-                            logger.debug(f"Sending message {msg.id} to {output_channel}")
+                            logger.debug(
+                                f"Sending message {msg.id} to {output_channel}"
+                            )
                             await self.client.send_message(output_channel, msg)
 
-            utc = pytz.timezone('UTC')
+            utc = pytz.timezone("UTC")
             self.last_message_check = datetime.datetime.now(tz=utc)
 
-            await asyncio.sleep(self.config['delay'])
+            await asyncio.sleep(self.config["delay"])
 
     async def _new_message_handler(self, event):
         msg_text = event.message.message
@@ -101,44 +107,48 @@ class Client:
         for raw_command, command_callback in self.commands.items():
             command = self.command_prefix + raw_command
 
-            if msg_text[:len(command)] == command:
-                await command_callback(event.chat_id, msg_text.replace(command, '').strip())
+            if msg_text[: len(command)] == command:
+                await command_callback(
+                    event.chat_id, msg_text.replace(command, "").strip()
+                )
 
     async def _command_info(self, chat_id, text):
         config = ConfigController.get_config()
         text = "**Группы:**\n\n"
 
-        for group in config['groups']:
-            group_txt = f'🔸 Group name: {group["name"]}\n'\
-                f'🔽 Input channels: {", ".join(group["inputs"])}\n'\
-                f'➡️ Output channels: {", ".join(group["outputs"])}\n'\
+        for group in config["groups"]:
+            group_txt = (
+                f'🔸 Group name: {group["name"]}\n'
+                f'🔽 Input channels: {", ".join(group["inputs"])}\n'
+                f'➡️ Output channels: {", ".join(group["outputs"])}\n'
                 f'#️⃣ White list words: {", ".join(group["words"])}\n\n'
+            )
 
             text += group_txt
 
         await self.client.send_message(chat_id, text)
 
     async def _command_add(self, chat_id, text):
-        data = text.split('\n')
+        data = text.split("\n")
         if len(data) < 3:
             await self.client.send_message(chat_id, "❌ Invalid command input")
             return
 
         group = {
             "name": data[0],
-            "inputs": [s.strip() for s in data[1].split(',')],
-            "outputs": [s.strip() for s in data[2].split(',')],
-            "words": []
+            "inputs": [s.strip() for s in data[1].split(",")],
+            "outputs": [s.strip() for s in data[2].split(",")],
+            "words": [],
         }
 
         if len(data) >= 4:
-            group["words"].extend([s.strip() for s in data[3].split(',')]),
+            group["words"].extend([s.strip() for s in data[3].split(",")]),
 
         # delete the group with the same name if it already exists in order to replace it with a new one
         config = ConfigController.get_config()
-        for g in config['groups']:
-            if g['name'] == group['name']:
-                ConfigController.del_group(g['name'])
+        for g in config["groups"]:
+            if g["name"] == group["name"]:
+                ConfigController.del_group(g["name"])
 
         ConfigController.add_group(group)
 
@@ -150,14 +160,15 @@ class Client:
         await self.client.send_message(chat_id, "✅")
 
     async def _command_help(self, chat_id, text):
-        text = "🌐 Commands Information\n\n"\
-            f"`{self.command_prefix + 'help'}` - outputs this message\n\n" \
-            f"`{self.command_prefix + 'info'}` - displays information about groups\n\n" \
-            f"`{self.command_prefix + 'add'} [group name]\n[input channels]\n[output channels]\n[whitelist of words]`\n"\
-            f" - adds a group, everywhere except the name can be listed separated by commas\n"\
-            f"**Example:**\n`{self.command_prefix}add new group\ntest 1, test channel 2\ntest channel 3\n#tag`\n\n" \
-            f"`{self.command_prefix + 'del'} [group name]` - deletes a group"\
-
+        text = (
+            "🌐 Commands Information\n\n"
+            f"`{self.command_prefix + 'help'}` - outputs this message\n\n"
+            f"`{self.command_prefix + 'info'}` - displays information about groups\n\n"
+            f"`{self.command_prefix + 'add'} [group name]\n[input channels]\n[output channels]\n[whitelist of words]`\n"
+            f" - adds a group, everywhere except the name can be listed separated by commas\n"
+            f"**Example:**\n`{self.command_prefix}add new group\ntest 1, test channel 2\ntest channel 3\n#tag`\n\n"
+            f"`{self.command_prefix + 'del'} [group name]` - deletes a group"
+        )
 
         await self.client.send_message(chat_id, text)
 
@@ -177,7 +188,8 @@ class Client:
                 limit=10,
                 max_id=0,
                 min_id=0,
-                hash=0)
+                hash=0,
+            )
         )
 
         messages = history.messages
@@ -199,31 +211,35 @@ class Client:
         """
         groups_list = []
 
-        for group in self.config['groups']:
+        for group in self.config["groups"]:
             groups_list.append(group)
 
-            groups_list[-1]['inputs'] = [await self._get_chat_id(g) for g in groups_list[-1]['inputs']]
-            groups_list[-1]['outputs'] = [await self._get_chat_id(g) for g in groups_list[-1]['outputs']]
+            groups_list[-1]["inputs"] = [
+                await self._get_chat_id(g) for g in groups_list[-1]["inputs"]
+            ]
+            groups_list[-1]["outputs"] = [
+                await self._get_chat_id(g) for g in groups_list[-1]["outputs"]
+            ]
 
         return groups_list
 
     def _get_phone(self):
-        return self.config['account_phone']
+        return self.config["account_phone"]
 
     @staticmethod
     def _enter_code():
-        return input('Enter the code from the Telegram message: ')
+        return input("Enter the code from the Telegram message: ")
 
     @staticmethod
     def _enter_password():
-        return input('Enter your two-factor authentication password: ')
+        return input("Enter your two-factor authentication password: ")
 
     async def _get_chat_id(self, chat_name):
         async for dialog in self.client.iter_dialogs():
             if dialog.name == chat_name:
                 return dialog.id
 
-        logger.error(f"Chat with the name {chat_name} was not found in the list of conversations, it will be skipped")
+        logger.error(
+            f"Chat with the name {chat_name} was not found in the list of conversations, it will be skipped"
+        )
         return None
-
-
