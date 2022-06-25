@@ -2,5 +2,5 @@
 venv/
 /logs/*
 __pycache__/
-session/
+sessions/
 config.json

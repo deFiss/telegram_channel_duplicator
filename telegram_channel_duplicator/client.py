@@ -8,13 +8,18 @@ import datetime
 from telethon.tl.functions.messages import GetHistoryRequest
 import asyncio
 
+SESSIONS_DIR = 'sessions'
+
 
 class Client:
     def __init__(self):
         self.config = ConfigController.get_config()
 
+        if not os.path.exists(SESSIONS_DIR):
+            os.mkdir(SESSIONS_DIR)
+
         self.client = TelegramClient(
-            os.path.join('session', 'account_session'),
+            os.path.join(SESSIONS_DIR, 'account_session'),
             self.config['account_api_id'],
             self.config['account_api_hash']
         )
