@@ -71,10 +71,12 @@ class Client:
             groups_list.append(group)
 
             groups_list[-1]["sources"] = [
-                SourceChannel(g, await self._get_chat_id(g)) for g in groups_list[-1]["sources"]
+                SourceChannel(g, await self._get_chat_id(g))
+                for g in groups_list[-1]["sources"]
             ]
             groups_list[-1]["destinations"] = [
-                DestinationChannel(g, await self._get_chat_id(g)) for g in groups_list[-1]["destinations"]
+                DestinationChannel(g, await self._get_chat_id(g))
+                for g in groups_list[-1]["destinations"]
             ]
 
         return groups_list

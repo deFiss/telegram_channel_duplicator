@@ -1,5 +1,3 @@
-
-
 class DestinationChannel:
     def __init__(self, name, channel_id):
         self._name = name
