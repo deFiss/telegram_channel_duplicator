@@ -25,8 +25,7 @@ class Client:
 
         logger.info("Account authorization")
 
-        utc = pytz.timezone("UTC")
-        self.last_message_check = datetime.datetime.now(tz=utc)
+        self.input_last_message_check = {}
 
         self.command_prefix = "~!"
         self.commands = {
@@ -179,6 +178,12 @@ class Client:
         We filter messages so that only those that were
         Submitted at the beginning of the current cycle
         """
+
+        offset = self.input_last_message_check.get(channel)
+
+        if not offset:
+            offset = 0
+
         history = await self.client(
             GetHistoryRequest(
                 peer=channel,
@@ -187,15 +192,34 @@ class Client:
                 add_offset=0,
                 limit=10,
                 max_id=0,
-                min_id=0,
+                min_id=offset,
                 hash=0,
             )
         )
 
-        messages = history.messages
-        new_message = [msg for msg in messages if msg.date > self.last_message_check]
+        messages = history.messages[::-1]
 
-        return new_message
+        logger.debug(f"last cycle id for '{channel}': {self.input_last_message_check.get(channel)}")
+        for m in messages:
+            logger.debug(
+                f"parse message with id: {m.id}, text: {m.message}, date: {m.date}"
+            )
+
+        if offset == 0:
+            self.input_last_message_check[channel] = messages[-1].id
+            logger.debug("skip first cycle")
+            return []
+
+        if len(messages):
+            logger.debug(
+                f"find new message with ids: {', '.join([str(m.id) for m in messages])}"
+            )
+
+            self.input_last_message_check[channel] = messages[-1].id
+        else:
+            logger.debug("new message not found")
+
+        return messages
 
     @staticmethod
     def _check_text_entry(text, filters_list):
