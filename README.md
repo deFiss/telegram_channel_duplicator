@@ -30,8 +30,6 @@ Before the first run, you need to configure the program using the `config.json` 
 * `delay` - Delay per second between checks for new messages.
 * `groups` - List of groups, there may be several.
   * `name` - Group name.
-  * `inputs` - **The names of the dialogs** in your account where the messages will come from.
-  * `outputs` - Names of dialogs where messages will be copied.
-  * `words` - If the list is not empty, only messages that contain one of the words from this list will be copied.
-  
-<h3>You can also configure the bot from the telegram, for more information send a message `~!help` in favorites while the bot is running</h3>
+  * `sources` - **The names of the dialogs** in your account where the messages will come from.
+  * `destinations` - Names of dialogs where messages will be copied.
+  * `whitelist` - If the list is not empty, only messages that contain one of the words from this list will be copied.

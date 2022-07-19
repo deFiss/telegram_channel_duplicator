@@ -1,18 +1,18 @@
 {
     "account_phone": "",
-    "account_api_id": 0,
-    "account_api_hash": "",
+    "api_id": 0,
+    "api_hash": "",
     "delay": 15,
     "groups": [
         {
             "name": "test",
-            "inputs": [
+            "sources": [
                 "test"
             ],
-            "outputs": [
+            "destinations": [
                 "Vladimir"
             ],
-            "words": []
+            "whitelist": []
         }
     ]
 }

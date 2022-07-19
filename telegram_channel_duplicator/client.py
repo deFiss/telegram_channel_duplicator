@@ -19,8 +19,8 @@ class Client:
 
         self.client = TelegramClient(
             os.path.join(SESSIONS_DIR, "account_session"),
-            self.config["account_api_id"],
-            self.config["account_api_hash"],
+            self.config["api_id"],
+            self.config["api_hash"],
         )
 
         logger.info("Account authorization")
@@ -66,14 +66,14 @@ class Client:
             groups = await self._get_groups()
 
             for group in groups:
-                for input_channel in group["inputs"]:
-                    if not input_channel:
+                for source_channel in group["sources"]:
+                    if not source_channel:
                         continue
 
-                    new_messages = await self._get_post_history(input_channel)
+                    new_messages = await self._get_post_history(source_channel)
 
-                    for output_channel in group["outputs"]:
-                        if not output_channel:
+                    for destination_channel in group["destinations"]:
+                        if not destination_channel:
                             continue
 
                         if new_messages:
@@ -82,9 +82,9 @@ class Client:
                         for msg in new_messages:
 
                             # if words whitelist enabled
-                            if group["words"]:
+                            if group["whitelist"]:
                                 if not self._check_text_entry(
-                                    msg.message, group["words"]
+                                    msg.message, group["whitelist"]
                                 ):
                                     logger.debug(
                                         f"Whitelisted words not found in new message {msg.id}"
@@ -92,9 +92,9 @@ class Client:
                                     continue
 
                             logger.debug(
-                                f"Sending message {msg.id} to {output_channel}"
+                                f"Sending message {msg.id} to {destination_channel}"
                             )
-                            await self.client.send_message(output_channel, msg)
+                            await self.client.send_message(destination_channel, msg)
 
             utc = pytz.timezone("UTC")
             self.last_message_check = datetime.datetime.now(tz=utc)
@@ -119,7 +119,7 @@ class Client:
         for group in config["groups"]:
             group_txt = (
                 f'🔸 Group name: {group["name"]}\n'
-                f'🔽 Input channels: {", ".join(group["inputs"])}\n'
+                f'🔽 Input channels: {", ".join(group["sources"])}\n'
                 f'➡️ Output channels: {", ".join(group["outputs"])}\n'
                 f'#️⃣ White list words: {", ".join(group["words"])}\n\n'
             )
@@ -215,10 +215,10 @@ class Client:
             groups_list.append(group)
 
             groups_list[-1]["inputs"] = [
-                await self._get_chat_id(g) for g in groups_list[-1]["inputs"]
+                await self._get_chat_id(g) for g in groups_list[-1]["sources"]
             ]
             groups_list[-1]["outputs"] = [
-                await self._get_chat_id(g) for g in groups_list[-1]["outputs"]
+                await self._get_chat_id(g) for g in groups_list[-1]["destinations"]
             ]
 
         return groups_list
