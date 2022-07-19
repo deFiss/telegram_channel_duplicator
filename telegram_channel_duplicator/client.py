@@ -27,14 +27,6 @@ class Client:
 
         self.input_last_message_check = {}
 
-        self.command_prefix = "~!"
-        self.commands = {
-            "info": self._command_info,
-            "add": self._command_add,
-            "del": self._command_del,
-            "help": self._command_help,
-        }
-
     async def start(self):
         """
         Client launch
@@ -47,9 +39,6 @@ class Client:
 
         logger.info(f"Account authorization was successful")
 
-        self.client.add_event_handler(
-            self._new_message_handler, events.NewMessage(pattern=r".+")
-        )
         await self.main_loop()
 
     async def main_loop(self):
@@ -95,81 +84,7 @@ class Client:
                             )
                             await self.client.send_message(destination_channel, msg)
 
-            utc = pytz.timezone("UTC")
-            self.last_message_check = datetime.datetime.now(tz=utc)
-
             await asyncio.sleep(self.config["delay"])
-
-    async def _new_message_handler(self, event):
-        msg_text = event.message.message
-
-        for raw_command, command_callback in self.commands.items():
-            command = self.command_prefix + raw_command
-
-            if msg_text[: len(command)] == command:
-                await command_callback(
-                    event.chat_id, msg_text.replace(command, "").strip()
-                )
-
-    async def _command_info(self, chat_id, text):
-        config = ConfigController.get_config()
-        text = "**Группы:**\n\n"
-
-        for group in config["groups"]:
-            group_txt = (
-                f'🔸 Group name: {group["name"]}\n'
-                f'🔽 Input channels: {", ".join(group["sources"])}\n'
-                f'➡️ Output channels: {", ".join(group["outputs"])}\n'
-                f'#️⃣ White list words: {", ".join(group["words"])}\n\n'
-            )
-
-            text += group_txt
-
-        await self.client.send_message(chat_id, text)
-
-    async def _command_add(self, chat_id, text):
-        data = text.split("\n")
-        if len(data) < 3:
-            await self.client.send_message(chat_id, "❌ Invalid command input")
-            return
-
-        group = {
-            "name": data[0],
-            "inputs": [s.strip() for s in data[1].split(",")],
-            "outputs": [s.strip() for s in data[2].split(",")],
-            "words": [],
-        }
-
-        if len(data) >= 4:
-            group["words"].extend([s.strip() for s in data[3].split(",")]),
-
-        # delete the group with the same name if it already exists in order to replace it with a new one
-        config = ConfigController.get_config()
-        for g in config["groups"]:
-            if g["name"] == group["name"]:
-                ConfigController.del_group(g["name"])
-
-        ConfigController.add_group(group)
-
-        await self.client.send_message(chat_id, "✅")
-
-    async def _command_del(self, chat_id, text):
-        ConfigController.del_group(text)
-
-        await self.client.send_message(chat_id, "✅")
-
-    async def _command_help(self, chat_id, text):
-        text = (
-            "🌐 Commands Information\n\n"
-            f"`{self.command_prefix + 'help'}` - outputs this message\n\n"
-            f"`{self.command_prefix + 'info'}` - displays information about groups\n\n"
-            f"`{self.command_prefix + 'add'} [group name]\n[input channels]\n[output channels]\n[whitelist of words]`\n"
-            f" - adds a group, everywhere except the name can be listed separated by commas\n"
-            f"**Example:**\n`{self.command_prefix}add new group\ntest 1, test channel 2\ntest channel 3\n#tag`\n\n"
-            f"`{self.command_prefix + 'del'} [group name]` - deletes a group"
-        )
-
-        await self.client.send_message(chat_id, text)
 
     async def _get_post_history(self, channel):
         """
