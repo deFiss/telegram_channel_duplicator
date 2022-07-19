@@ -10,6 +10,9 @@ api_hash: 00000000000000
 # parse messages delay in seconds
 delay: 5
 
+# the number of messages whose edits in the original channel will be tracked
+edit_message_checker_limit: 10
+
 # groups, maybe several
 # see YAML array of object format
 groups:
