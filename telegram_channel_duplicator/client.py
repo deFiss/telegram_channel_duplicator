@@ -50,7 +50,6 @@ class Client:
         """
         while True:
             logger.debug("cycle")
-            self.config = ConfigController.get_config()
             groups = await self._get_groups()
 
             for group in groups:
