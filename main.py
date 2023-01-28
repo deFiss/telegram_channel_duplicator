@@ -1,9 +1,10 @@
-from telegram_channel_duplicator.client import Client
 from loguru import logger
 import colorama
 import os
 import sys
 import asyncio
+
+from telegram_channel_duplicator.duplicator import Duplicator
 
 
 async def main():
@@ -24,8 +25,8 @@ async def main():
     )
     logger.info(colorama.Fore.LIGHTYELLOW_EX + "Created by https://github.com/deFiss")
 
-    client = Client()
-    await client.start()
+    duplicator = Duplicator()
+    await duplicator.start()
 
 
 if __name__ == "__main__":

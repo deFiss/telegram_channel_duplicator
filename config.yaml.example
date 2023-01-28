@@ -1,0 +1,43 @@
+# account phone number
+account_phone: +790000000
+
+# app info
+# see https://core.telegram.org/api/obtaining_api_id
+
+api_id: 00000
+api_hash: 00000000000000
+
+# parse messages delay in seconds
+delay: 5
+
+# the number of messages whose edits in the original channel will be tracked
+edit_message_checker_limit: 10
+
+# groups, maybe several
+# see YAML array of object format
+groups:
+
+  # group name, can be anything
+  - name: test
+    # list of channels, chats or private messages from where you want to copy messages
+    sources:
+      # expected channel\group\dm title which is visible in the list of dialogs in your telegram application for example
+
+      - "Telegram channel Title"
+
+    # list of channels\chats\private messages where you want to copy messages
+    destinations:
+      - "Telegram destination channel Title"
+
+    # if not empty, only messages that contain one of the words specified in the whitelist are copied
+    whitelist: [ ]
+
+  # Durovs Code to Professor and my channel only if the message contains "Telegram"
+  - name: Durovs Code to Professor and my channel
+    sources:
+      - Durov's Code
+    destinations:
+      - Professor
+      - "My channel
+    whitelist:
+      - Telegram
