@@ -1,5 +1,5 @@
 # account phone number
-account_phone: +790000000
+account_phone: "+790000000"
 
 # app info
 # see https://core.telegram.org/api/obtaining_api_id
